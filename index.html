@@ -18,7 +18,7 @@
     font-variant-numeric: tabular-nums;
   }
   .jahre button:hover { background: #f1f3f4; }
-  .jahre button[aria-selected="true"] { background: #e8f0fe; color: #1a73e8; font-weight: 500; }
+  .jahre button[data-jahr][aria-selected="true"] { background: #e8f0fe; color: #1a73e8; font-weight: 500; }
   .jahre button:focus-visible { outline: 2px solid #1a73e8; outline-offset: 1px; }
   #ansicht {
     position: relative; flex: 1 1 auto; min-height: 0;
@@ -28,7 +28,7 @@
   }
   #ansicht.zieht { cursor: grabbing; user-select: none; }
   #flaeche { display: block; }
-  #kalender { display: block; background: #fff; margin: 0 auto; }
+  #kalender { display: block; background: #fff; margin: 0 auto; overflow: hidden; }
   .werkzeug {
     margin-left: auto;
     display: flex; align-items: center;
@@ -65,7 +65,6 @@
   <button id="kleiner" title="Verkleinern" aria-label="Verkleinern">&minus;</button>
   <span class="stufe" id="stufe">100 %</span>
   <button id="groesser" title="Vergrössern" aria-label="Vergrössern">+</button>
-  <button id="einpassen" class="text" title="Ganzes Jahr anzeigen">Einpassen</button>
 </div>
 </div>
 <div id="ansicht">
@@ -436,6 +435,8 @@
 <path clip-rule="nonzero" d="M 0 0.445312 L 83 0.445312 L 83 1189.65625 L 0 1189.65625 Z M 0 0.445312 "/>
 </clipPath>
 </defs>
+<clipPath id="jahrclip"><rect id="jahrrect" x="0" y="297.638" width="419.528" height="297.638"/></clipPath>
+<g clip-path="url(#jahrclip)">
 <g clip-path="url(#clip-0)">
 <path fill-rule="nonzero" fill="rgb(90.588379%, 90.588379%, 90.588379%)" fill-opacity="1" d="M 0 0.445312 L 0 1189.660156 L 82.394531 1189.660156 L 82.394531 0.445312 Z M 0 0.445312 "/>
 </g>
@@ -12665,6 +12666,7 @@
 <use xlink:href="#glyph-3-26" x="61.989857" y="572.651553"/>
 <use xlink:href="#glyph-3-13" x="65.723157" y="572.651553"/>
 </g>
+</g>
 <g id="heute" style="display:none" aria-hidden="true">
 <rect class="heute-halo" x="-7.5" y="-5.6" width="15" height="11.2" rx="3"/>
 <rect class="heute-ring" x="-6" y="-4.4" width="12" height="8.8" rx="2.2"/>
@@ -12685,7 +12687,7 @@ const JAHRE = { 2026: 1, 2027: 2, 2028: 3 };   /* Position im Originalkalender *
 const MIN = 0.5, MAX = 6;
 let faktor = 1;                   /* 1 = an Breite angepasst */
 
-/* Einpassen: ganzes Jahr sichtbar, begrenzt durch Breite oder Höhe */
+/* 100 %: ganzes Jahr sichtbar, begrenzt durch Breite oder Höhe */
 function basisBreite() { return Math.max(50, Math.floor(Math.min(ansicht.clientWidth, ansicht.clientHeight / VERH)) - 1); }
 
 function setzen(neu, mx, my) {
@@ -12708,7 +12710,6 @@ function setzen(neu, mx, my) {
 
 document.getElementById("groesser").onclick = () => setzen(faktor * 1.25);
 document.getElementById("kleiner").onclick = () => setzen(faktor / 1.25);
-document.getElementById("einpassen").onclick = () => { setzen(1); ansicht.scrollTo(0, 0); };
 
 ansicht.addEventListener("wheel", e => {
   if (!e.ctrlKey) return;
@@ -12720,7 +12721,6 @@ ansicht.addEventListener("wheel", e => {
 document.addEventListener("keydown", e => {
   if (e.key === "+" || e.key === "=") setzen(faktor * 1.25);
   else if (e.key === "-") setzen(faktor / 1.25);
-  else if (e.key === "0") { setzen(1); ansicht.scrollTo(0, 0); }
 });
 
 /* Maus: Ziehen zum Verschieben */
@@ -12754,10 +12754,11 @@ ansicht.addEventListener("touchmove", e => {
 ansicht.addEventListener("touchend", () => { pinch = null; });
 
 /* Jahr wechseln */
-const reiter = document.querySelectorAll(".jahre button");
+const reiter = document.querySelectorAll(".jahre button[data-jahr]");
 function jahrZeigen(jahr) {
   svg.setAttribute("viewBox", "0 " + (JAHRE[jahr] * JAHRHOEHE).toFixed(3) + " " + BREITE + " " + JAHRHOEHE.toFixed(3));
   svg.setAttribute("aria-label", "Schulferienkalender " + jahr);
+  document.getElementById("jahrrect").setAttribute("y", (JAHRE[jahr] * JAHRHOEHE).toFixed(3));
   reiter.forEach(b => b.setAttribute("aria-selected", b.dataset.jahr == jahr ? "true" : "false"));
   ansicht.scrollTo(0, 0);
 }
