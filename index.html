@@ -12686,7 +12686,7 @@ const MIN = 0.5, MAX = 6;
 let faktor = 1;                   /* 1 = an Breite angepasst */
 
 /* Einpassen: ganzes Jahr sichtbar, begrenzt durch Breite oder Höhe */
-function basisBreite() { return Math.max(50, Math.min(ansicht.clientWidth, ansicht.clientHeight / VERH)); }
+function basisBreite() { return Math.max(50, Math.floor(Math.min(ansicht.clientWidth, ansicht.clientHeight / VERH)) - 1); }
 
 function setzen(neu, mx, my) {
   neu = Math.min(MAX, Math.max(MIN, neu));
@@ -12702,6 +12702,8 @@ function setzen(neu, mx, my) {
   ansicht.scrollLeft = px * b - mx;
   ansicht.scrollTop = py * b * VERH - my;
   stufeAnzeige.textContent = Math.round(faktor * 100) + " %";
+  /* Keine Scrollbalken, solange der Kalender ganz sichtbar ist */
+  ansicht.style.overflow = faktor > 1.001 ? "auto" : "hidden";
 }
 
 document.getElementById("groesser").onclick = () => setzen(faktor * 1.25);
